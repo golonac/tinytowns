@@ -1,60 +1,56 @@
 export class Cell {
-  things!: Thing[]
+  constructor(public id: string, public things: Thing[]) { }
 }
 export interface Thing {
+  animate: boolean
+  get id(): any
   get class(): string
 }
 export interface Building { }
-export interface Cube extends Thing {
-  get id(): ResourceType
+export abstract class Cube implements Thing {
+  animate: boolean = true
+  get class(): string {
+    return 'cube ' + ResourceType[this.id].toLowerCase() + (this.animate ? ' animate' : '')
+  }
+  abstract get id(): ResourceType
 }
 
 export enum ResourceType {
   Glass, Stone, Wheat, Wood, Brick, Wild
 }
 
-export class GlassCube implements Thing, Cube {
+export class GlassCube extends Cube {
   get id(): ResourceType {
     return ResourceType.Glass
   }
-  get class(): string {
-    return 'cube glass'
-  }
 }
-export class StoneCube implements Thing, Cube {
+export class StoneCube extends Cube {
   get id(): ResourceType {
     return ResourceType.Stone
   }
-  get class(): string {
-    return 'cube stone'
-  }
 }
-export class WoodCube implements Thing, Cube {
+export class WoodCube extends Cube {
   get id(): ResourceType {
     return ResourceType.Wood
   }
-  get class(): string {
-    return 'cube wood'
-  }
 }
-export class WheatCube implements Thing, Cube {
+export class WheatCube extends Cube {
   get id(): ResourceType {
     return ResourceType.Wheat
   }
-  get class(): string {
-    return 'cube wheat'
-  }
 }
-export class BrickCube implements Thing, Cube {
+export class BrickCube extends Cube {
   get id(): ResourceType {
     return ResourceType.Brick
   }
-  get class(): string {
-    return 'cube brick'
-  }
 }
 export class Building1 implements Thing, Building {
+  animate: boolean = true
   variation: string = 'a'
+
+  get id(): string {
+    return 'b1'
+  }
 
   get class(): string {
     return 'building building1'
@@ -62,6 +58,7 @@ export class Building1 implements Thing, Building {
 }
 
 export abstract class BuildingWithVariations implements Thing, Building {
+  animate: boolean = true
   abstract get classBase(): string
   get numVariations(): number {
     return 4
@@ -72,6 +69,8 @@ export abstract class BuildingWithVariations implements Thing, Building {
   constructor(seed: number) {
     this.seed = seed
   }
+
+  abstract get id(): any
 
   get variation(): string {
     switch (this.seed % this.numVariations) {
@@ -97,36 +96,57 @@ export abstract class BuildingWithVariations implements Thing, Building {
 }
 
 export class Building2 extends BuildingWithVariations {
+  get id(): string {
+    return 'b2'
+  }
   get classBase(): string {
     return 'building2'
   }
 }
 export class Building3 extends BuildingWithVariations {
+  get id(): string {
+    return 'b3'
+  }
   get classBase(): string {
     return 'building3'
   }
 }
 export class Building4 extends BuildingWithVariations {
+  get id(): string {
+    return 'b4'
+  }
   get classBase(): string {
     return 'building4'
   }
 }
 export class Building5 extends BuildingWithVariations {
+  get id(): string {
+    return 'b5'
+  }
   get classBase(): string {
     return 'building5'
   }
 }
 export class Building6 extends BuildingWithVariations {
+  get id(): string {
+    return 'b6'
+  }
   get classBase(): string {
     return 'building6'
   }
 }
 export class Building7 extends BuildingWithVariations {
+  get id(): string {
+    return 'b7'
+  }
   get classBase(): string {
     return 'building7'
   }
 }
 export class Building8 extends BuildingWithVariations {
+  get id(): string {
+    return 'b8'
+  }
   get numVariations(): number {
     return 12
   }

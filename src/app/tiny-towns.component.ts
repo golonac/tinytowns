@@ -1,4 +1,5 @@
-import { Component, OnInit } from '@angular/core'
+import { Component } from '@angular/core'
+import { ActivatedRoute, Router } from '@angular/router'
 import Prando from 'prando'
 import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Building5, Building6, Building7, Building8, Card, Cell, Cube, GlassCard, GlassCube, StoneCard, StoneCube, Thing, WheatCard, WheatCube, WildCard, WoodCard, WoodCube } from './model'
 
@@ -45,6 +46,8 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
         [class.selected]="selectedThing == selectableCube"
         (click)="selectThing(selectableCube)"></div>
     </div>
+
+    <img hidden *ngFor="let img of images" [src]="img" />
   `,
   styles: [`
     $cardWidth: 110px;
@@ -62,13 +65,6 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
 
     :host {
       margin: 20px 0;
-    }
-
-    #top {
-      display: grid;
-      gap: 20px;
-      align-items: center;
-      grid-template-columns: repeat(3, min-content);
     }
 
     .removable {
@@ -188,7 +184,7 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       from { margin-top: -100px; }
       to { margin-top: 0; }
     }
-    #discardPile .card {
+    #discardPile .card.animate {
       animation: fadeIn .07s linear, slideIn .15s ease-out;
     }
     #discardPile .card:after {
@@ -216,10 +212,10 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       width: 30px;
       height: 30px;
     }
-    #grid .cube {
+    #grid .cube.animate {
       animation: fadeIn .1 linear, slideIn .1s ease-out;
     }
-    #grid .building {
+    #grid .building.animate {
       animation: fadeIn .2 linear, slideIn .2s ease-out;
     }
     @each $i, $scale in (1: 70, 2: 80, 3: 60, 4: 90, 5: 70, 6: 90, 7: 100, 8: 45) {
@@ -319,26 +315,40 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
     }
   `]
 })
-export class TinyTownsComponent implements OnInit {
-  cells: Cell[]
+export class TinyTownsComponent {
+  images = ['../assets/building1.png', '../assets/building1a.png', '../assets/building2.png', '../assets/building2a.png', '../assets/building2b.png', '../assets/building2c.png', '../assets/building2d.png', '../assets/building3.png', '../assets/building3a.png', '../assets/building3b.png', '../assets/building3c.png', '../assets/building3d.png', '../assets/building4.png', '../assets/building4a.png', '../assets/building4b.png', '../assets/building4c.png', '../assets/building4d.png', '../assets/building5.png', '../assets/building5a.png', '../assets/building5b.png', '../assets/building5c.png', '../assets/building5d.png', '../assets/building6.png', '../assets/building6a.png', '../assets/building6b.png', '../assets/building6c.png', '../assets/building6d.png', '../assets/building7.png', '../assets/building7a.png', '../assets/building7b.png', '../assets/building7c.png', '../assets/building7d.png', '../assets/building8.png', '../assets/building8a.png', '../assets/building8b.png', '../assets/building8c.png', '../assets/building8d.png', '../assets/building8e.png', '../assets/building8f.png', '../assets/building8g.png', '../assets/building8h.png', '../assets/building8i.png', '../assets/building8j.png', '../assets/building8k.png', '../assets/building8l.png']
+
+  cells!: Cell[]
   selectableCubes: Cube[] = [new BrickCube(), new WheatCube(), new GlassCube(), new WoodCube(), new StoneCube()]
-  selectableBuildings: Thing[]
+  selectableBuildings!: Thing[]
   selectedThing: Thing | undefined
   drawPile!: Card[]
   discardPile!: Card[]
   seed: number
-  rng: Prando
+  rng!: Prando
+  history: string
 
-  get leftSelectableBuildings(): Thing[] {
-    return this.selectableBuildings.slice(0, 4)
+  constructor(private route: ActivatedRoute, private router: Router) {
+    route.queryParams.subscribe(q => {
+      const historyChanged = q.a && q.a != this.history
+      const seedChanged = q.a && q.s != this.seed
+      if (historyChanged || seedChanged) {
+        this.history = q.a ?? ''
+        this.seed = q.s ?? Math.floor(Math.random() * 100000) + ''
+        this.clear()
+        this.replayHistory()
+      }
+    })
+
+    const q = route.snapshot.queryParams
+    this.history = q.a ?? ''
+    this.seed = q.s ?? Math.floor(Math.random() * 100000) + ''
+    this.updateHistory()
+    this.clear()
+    this.replayHistory()
   }
 
-  get rightSelectableBuildings(): Thing[] {
-    return this.selectableBuildings.slice(4)
-  }
-
-  constructor() {
-    this.seed = Math.floor(Math.random() * 100000)
+  clear() {
     this.rng = new Prando(this.seed)
 
     this.selectableBuildings = [
@@ -352,8 +362,36 @@ export class TinyTownsComponent implements OnInit {
       new Building8(this.rng.nextInt(0, 100000)),
     ]
 
-    this.cells = Array.from({ length: 16 }, (x, i) => <Cell>{ things: [] })
+    this.cells = Array.from({ length: 16 }, (x, i) => new Cell(Math.floor(i / 4) + '' + (i % 4), []))
     this.prepareDeck()
+  }
+
+  replayHistory() {
+    for (let action of this.history.split(',')) {
+      switch (action[0]) {
+        case 'd':
+          this.drawOrReshuffle(false)
+          break
+        case 'b':
+          {
+            const [buildingId, cellId] = action.split('_')
+            const building = this.selectableBuildings.find(x => x.id == buildingId)
+            const cell = this.cells.find(x => x.id == cellId)
+            if (building && cell) this.addToCell(cell, building, false)
+            this.selectedThing = undefined
+          }
+          break
+        default:
+          {
+            const [resourceId, cellId] = action.split('_')
+            const resource = this.selectableCubes.find(x => x.id + '' == resourceId)
+            const cell = this.cells.find(x => x.id == cellId)
+            if (resource && cell) this.addToCell(cell, resource, false)
+            this.selectedThing = undefined
+          }
+          break
+      }
+    }
   }
 
   prepareDeck() {
@@ -372,10 +410,7 @@ export class TinyTownsComponent implements OnInit {
     }
   }
 
-  ngOnInit(): void {
-  }
-
-  drawOrReshuffle() {
+  drawOrReshuffle(addToHistory: boolean = true) {
     const card = this.drawPile.pop()
     if (card) {
       this.discardPile.push(card)
@@ -384,6 +419,13 @@ export class TinyTownsComponent implements OnInit {
     else {
       this.prepareDeck()
     }
+    if (addToHistory) this.updateHistory('d')
+  }
+
+  updateHistory(s: string = '') {
+    if (this.history) this.history += ','
+    if (s) this.history += s
+    this.router.navigate([], { queryParams: { s: this.seed, a: this.history } })
   }
 
   private shuffleArray(array: any[]) {
@@ -398,12 +440,21 @@ export class TinyTownsComponent implements OnInit {
     else this.selectedThing = thing
   }
 
+  addToCell(cell: Cell, thing: Thing, addToHistory: boolean = true) {
+    const t = Object.create(thing)
+    t.animate = addToHistory
+    cell.things = [...cell.things, t]
+    if (addToHistory) this.updateHistory(`${thing.id}_${cell.id}`)
+  }
+
   selectCell(cell: Cell) {
-    if (this.selectedThing) cell.things = [...cell.things, this.selectedThing]
+    if (this.selectedThing) this.addToCell(cell, this.selectedThing)
     this.selectedThing = undefined
   }
 
   removeThing(cell: Cell, nthThing: number) {
-    if (!this.selectedThing) cell.things.splice(nthThing, 1)
+    if (!this.selectedThing) {
+      cell.things.splice(nthThing, 1)
+    }
   }
 }
