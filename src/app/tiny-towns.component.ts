@@ -47,7 +47,7 @@ import Prando from 'prando'
   `,
   styles: [`
     $cardWidth: 110px;
-    $cardRatio: 1.7;
+    $cardRatio: 1.71;
     $cardHeight: $cardWidth * $cardRatio;
     $resourceCardWidth: 131px;
     $resourceCardRatio: 1.5;
@@ -165,6 +165,7 @@ import Prando from 'prando'
       width: $cardWidth;
       height: $cardHeight;
       background-color: white;
+      border-radius: 5px;
     }
     @each $resourceType, $resourceColor in $resourceTypes {
       .cube.#{$resourceType} {
@@ -176,6 +177,17 @@ import Prando from 'prando'
       display: grid;
       justify-content: center;
       align-items: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    @keyframes slideIn {
+      from { margin-top: -100px; }
+      to { margin-top: 0; }
+    }
+    #discardPile .card {
+      animation: fadeIn .08s linear, slideIn .2s ease-out;
     }
     #discardPile .card:after {
       content: "";
@@ -201,6 +213,9 @@ import Prando from 'prando'
       background-position: center;
       width: 30px;
       height: 30px;
+    }
+    #grid .building, #grid .cube {
+      animation: fadeIn .1 linear, slideIn .1s ease-out;
     }
     @each $i, $scale in (1: 70, 2: 80, 3: 60, 4: 90, 5: 70, 6: 90, 7: 100, 8: 45) {
       .building#{$i} {
@@ -229,6 +244,7 @@ import Prando from 'prando'
       }
       @media (hover: hover) and (pointer: fine) {
         .building:after {
+          border-radius: 10px;
           opacity: 0;
           pointer-events: none;
           content: "";
@@ -236,7 +252,8 @@ import Prando from 'prando'
           top: 50%;
           left: 50%;
           background: inherit;
-          transform: translate(-50%, -50%);
+          background-color: transparent;
+          transform: translate(-50%, -50%) scale(.85);
           width: $cardWidth * 3;
           height: $cardHeight * 3;
           max-width: 90vw;
@@ -246,6 +263,8 @@ import Prando from 'prando'
         }
         .building:hover:after {
           opacity: 1;
+          transform: translate(-50%, -50%) scale(1);
+          transition: opacity .05s ease, transform .2s ease;
           transition-delay: .333s;
         }
       }
@@ -253,6 +272,7 @@ import Prando from 'prando'
     #grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr 1fr;
+      border-radius: 2px;
       background: #BEC760;
       max-width: 500px;
       gap: 10px;
@@ -261,6 +281,7 @@ import Prando from 'prando'
     }
     #grid > * {
       border: 2px solid rgba(0, 0, 0, .15);
+      border-radius: 2px;
       min-width: 100px;
       min-height: 100px;
       background: #BFBA6D;
