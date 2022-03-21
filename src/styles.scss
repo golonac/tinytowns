@@ -7,3 +7,7 @@ body {
 .disclaimer {
   display: none !important;
 }
+
+:focus {
+  outline: none !important;
+}
