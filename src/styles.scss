@@ -4,6 +4,10 @@ body {
   font-family: sans-serif;
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 .disclaimer {
   display: none !important;
 }
