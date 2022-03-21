@@ -227,25 +227,27 @@ import Prando from 'prando'
           background-image: url(../assets/building8#{$i}.png);
         }
       }
-      .building:after {
-        opacity: 0;
-        pointer-events: none;
-        content: "";
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        background: inherit;
-        transform: translate(-50%, -50%);
-        width: $cardWidth * 3;
-        height: $cardHeight * 3;
-        max-width: 90vw;
-        max-height: 90vh;
-        box-shadow: 0 0px 80px rgba(0, 0, 0, 1);
-        z-index: 999;
-      }
-      .building:hover:after {
-        opacity: 1;
-        transition-delay: .25s;
+      @media (hover: hover) {
+        .building:after {
+          opacity: 0;
+          pointer-events: none;
+          content: "";
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          background: inherit;
+          transform: translate(-50%, -50%);
+          width: $cardWidth * 3;
+          height: $cardHeight * 3;
+          max-width: 90vw;
+          max-height: 90vh;
+          box-shadow: 0 0px 80px rgba(0, 0, 0, 1);
+          z-index: 999;
+        }
+        .building:hover:after {
+          opacity: 1;
+          transition-delay: .333s;
+        }
       }
     }
     #grid {
