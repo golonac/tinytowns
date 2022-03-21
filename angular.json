@@ -56,7 +56,7 @@
                 }
               ],
               "index": {
-                "input": "src/index.html",
+                "input": "src/index-prod.html",
                 "output": "index.html"
               },
               "fileReplacements": [
