@@ -227,7 +227,7 @@ import Prando from 'prando'
           background-image: url(../assets/building8#{$i}.png);
         }
       }
-      @media (hover: hover) {
+      @media (hover: hover) and (pointer: fine) {
         .building:after {
           opacity: 0;
           pointer-events: none;
