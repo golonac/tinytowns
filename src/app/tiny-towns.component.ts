@@ -92,7 +92,7 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       cursor: pointer;
     }
     .active:hover {
-      outline: 2px solid black;
+      outline: 4px solid black;
     }
     #cubes, .buildings, #deck {
       padding-top: 30px;
@@ -149,14 +149,15 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       cursor: pointer;
     }
     .selected {
-      outline: 4px solid black;
-      outline-offset: 2px;
+      outline: 6px solid black;
+      outline-offset: 4px;
     }
     .cube {
       position: relative;
       width: 30px;
       height: 30px;
       border: 1px solid rgba(0, 0, 0, .5);
+      border-radius: 1px;
     }
     #cubes .cube {
       width: 60px;
@@ -166,7 +167,7 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       width: $cardWidth;
       height: $cardHeight;
       background-color: white;
-      border-radius: 3px;
+      border-radius: 1px;
     }
     @each $resourceType, $resourceColor in $resourceTypes {
       .cube.#{$resourceType} {
