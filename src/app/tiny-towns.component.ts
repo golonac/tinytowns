@@ -2,7 +2,7 @@ import { Location } from '@angular/common'
 import { Component } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import Prando from 'prando'
-import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Building5, Building6, Building7, Building8, Card, Cell, Cube, GlassCard, GlassCube, StoneCard, StoneCube, Thing, WheatCard, WheatCube, WildCard, WoodCard, WoodCube } from './model'
+import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Building5, Building6, Building7, Building8, Card, Cell, Cube, GlassCard, GlassCube, ResourceType, StoneCard, StoneCube, Thing, WheatCard, WheatCube, WildCard, WoodCard, WoodCube } from './model'
 
 declare let window: any
 
@@ -13,6 +13,8 @@ declare let window: any
       <button (click)="newGame()">New game</button>
       <button *ngIf="history" (click)="restartGame()">Restart</button>
       <button *ngIf="history" ngxClipboard [cbContent]="url">Share</button>
+      <button *ngIf="!showCardCounters" (click)="showCardCounters = true">Show counters</button>
+      <button *ngIf="showCardCounters" (click)="showCardCounters = false">Hide counters</button>
     </div>
 
     <div class="buildings">
@@ -46,6 +48,12 @@ declare let window: any
       </div>
 
       <div id="deck">
+        <div id="cubesInDrawPile">
+          <div *ngFor="let selectableCube of selectableCubes"
+            [class]="selectableCube.class">
+            <ng-container *ngIf="showCardCounters">{{cubesInDrawPile(selectableCube.id)}}</ng-container>
+          </div>
+        </div>
         <div id="drawPile"
           (click)="drawOrReshuffle()">
           <div class="card reshuffle">Reshuffle</div>
@@ -56,6 +64,12 @@ declare let window: any
           <div *ngFor="let card of discardPile"
             [class]="card.class"></div>
         </div>
+        <div id="cubesInDiscardPile">
+          <div *ngFor="let selectableCube of selectableCubes"
+            [class]="selectableCube.class">
+            <ng-container *ngIf="showCardCounters">{{cubesInDiscardPile(selectableCube.id)}}</ng-container>
+          </div>
+        </div>
       </div>
 
       <div id="cubes">
@@ -63,7 +77,9 @@ declare let window: any
           *ngFor="let selectableCube of selectableCubes"
           [class]="selectableCube.class"
           [class.selected]="selectedThing == selectableCube"
-          (click)="selectThing(selectableCube)"></div>
+          (click)="selectThing(selectableCube)">
+          <ng-container *ngIf="showCardCounters">{{getCubeTotals(selectableCube.id)}}</ng-container>
+        </div>
       </div>
     </ng-container>
   `,
@@ -171,6 +187,20 @@ declare let window: any
         #465298 10px,
         #465298 20px
       );
+    }
+    #cubesInDrawPile, #cubesInDiscardPile, #cubesTotal {
+      display: grid;
+    }
+    .cube {
+      display: grid;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      width: 24px;
+      height: 24px;
+      font-size: 14px;
+      text-shadow: 0 0 2px rgba(0, 0, 0, 1);
+      border: none;
     }
     .buildings {
       grid-template-columns: repeat(4, max-content);
@@ -364,6 +394,7 @@ declare let window: any
 export class TinyTownsComponent {
   cells!: Cell[]
   selectableCubes: Cube[] = [new BrickCube(), new WheatCube(), new GlassCube(), new WoodCube(), new StoneCube()]
+  cubeTotals!: Array<{ res: ResourceType, total: number }>
   selectableBuildings!: Thing[]
   selectedThing: Thing | undefined
   drawPile!: Card[]
@@ -373,6 +404,7 @@ export class TinyTownsComponent {
   history: string
   monument?: Thing
   monumentOptions!: Thing[]
+  showCardCounters = false
 
   constructor(private route: ActivatedRoute, public router: Router, public location: Location) {
     route.queryParams.subscribe(q => {
@@ -393,7 +425,14 @@ export class TinyTownsComponent {
   clear() {
     this.rng = new Prando(this.seed)
     this.monument = undefined
-
+    this.cubeTotals = [
+      { res: ResourceType.Brick, total: 0 },
+      { res: ResourceType.Glass, total: 0 },
+      { res: ResourceType.Stone, total: 0 },
+      { res: ResourceType.Wheat, total: 0 },
+      { res: ResourceType.Wild, total: 0 },
+      { res: ResourceType.Wood, total: 0 },
+    ]
     do {
       this.monumentOptions = [
         new Building8(this.rng.nextInt(0, 100000)),
@@ -473,6 +512,10 @@ export class TinyTownsComponent {
   drawOrReshuffle(addToHistory: boolean = true) {
     const card = this.drawPile.pop()
     if (card) {
+      const asd = this.cubeTotals.find(x => x.res == card.id)
+      if (asd) asd.total++
+    }
+    if (card) {
       this.discardPile.push(card)
       this.selectedThing = this.selectableCubes.find(x => x.id == card.id)
     }
@@ -543,5 +586,17 @@ export class TinyTownsComponent {
 
   get url(): string {
     return window.location.href
+  }
+
+  cubesInDiscardPile(cube: ResourceType) {
+    return this.discardPile.filter(x => x.id == cube).length
+  }
+
+  cubesInDrawPile(cube: ResourceType) {
+    return 3 - this.discardPile.filter(x => x.id == cube).length
+  }
+
+  getCubeTotals(cube: ResourceType) {
+    return this.cubeTotals.find(x => x.res == cube)?.total
   }
 }
