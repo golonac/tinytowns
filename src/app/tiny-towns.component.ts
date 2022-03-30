@@ -1,11 +1,20 @@
+import { Location } from '@angular/common'
 import { Component } from '@angular/core'
 import { ActivatedRoute, Router } from '@angular/router'
 import Prando from 'prando'
 import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Building5, Building6, Building7, Building8, Card, Cell, Cube, GlassCard, GlassCube, StoneCard, StoneCube, Thing, WheatCard, WheatCube, WildCard, WoodCard, WoodCube } from './model'
 
+declare let window: any
+
 @Component({
   selector: 'app-tiny-towns',
   template: `
+    <div class="tools">
+      <button (click)="newGame()">New game</button>
+      <button *ngIf="history" (click)="restartGame()">Restart</button>
+      <button *ngIf="history" ngxClipboard [cbContent]="url">Share</button>
+    </div>
+
     <div class="buildings">
       <div
         *ngFor="let selectableBuilding of selectableBuildings"
@@ -14,38 +23,49 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
         (click)="selectThing(selectableBuilding)"></div>
     </div>
 
-    <div id="grid">
-      <div *ngFor="let cell of cells"
-        [class.active]="selectedThing"
-        (click)="selectCell(cell)">
-        <div *ngFor="let thing of cell.things; let i = index"
-          [class]="thing.class"
-          [class.removable]="!selectedThing"
-          (click)="removeThing(cell, i)">
+    <div *ngIf="monument === undefined" class="selectMonument">
+      <h3>Select monument:</h3>
+      <div class="buildings">
+      <div *ngFor="let building of monumentOptions; let i = index"
+        [class]="building.class"
+        (click)="selectMonument(i)"></div>
+      </div>
+    </div>
+
+    <ng-container *ngIf="monument !== undefined">
+      <div id="grid">
+        <div *ngFor="let cell of cells"
+          [class.active]="selectedThing"
+          (click)="selectCell(cell)">
+          <div *ngFor="let thing of cell.things; let i = index"
+            [class]="thing.class"
+            [class.removable]="!selectedThing"
+            (click)="removeThing(cell, i)">
+          </div>
         </div>
       </div>
-    </div>
 
-    <div id="deck">
-      <div id="drawPile"
-        (click)="drawOrReshuffle()">
-        <div class="card reshuffle">Reshuffle</div>
-        <div *ngFor="let card of drawPile"
-          [class]="card.class"></div>
+      <div id="deck">
+        <div id="drawPile"
+          (click)="drawOrReshuffle()">
+          <div class="card reshuffle">Reshuffle</div>
+          <div *ngFor="let card of drawPile"
+            [class]="card.class"></div>
+        </div>
+        <div id="discardPile">
+          <div *ngFor="let card of discardPile"
+            [class]="card.class"></div>
+        </div>
       </div>
-      <div id="discardPile">
-        <div *ngFor="let card of discardPile"
-          [class]="card.class"></div>
-      </div>
-    </div>
 
-    <div id="cubes">
-      <div
-        *ngFor="let selectableCube of selectableCubes"
-        [class]="selectableCube.class"
-        [class.selected]="selectedThing == selectableCube"
-        (click)="selectThing(selectableCube)"></div>
-    </div>
+      <div id="cubes">
+        <div
+          *ngFor="let selectableCube of selectableCubes"
+          [class]="selectableCube.class"
+          [class.selected]="selectedThing == selectableCube"
+          (click)="selectThing(selectableCube)"></div>
+      </div>
+    </ng-container>
 
     <img hidden *ngFor="let img of images" [src]="img" />
   `,
@@ -62,6 +82,22 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
     $stone: #BAAFA1;
     $wood: #613B37;
     $resourceTypes: ('brick': $brick, 'glass': $glass, 'wheat': $wheat, 'stone': $stone, 'wood': $wood);
+
+    .tools {
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    button {
+      box-shadow: 0px 1px 2px rgba(0, 0, 0, 1);
+      border-radius: 6px;
+      padding: 8px 12px;
+      background: $glass;
+      margin-right: 10px;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
 
     :host {
       margin: 20px 0;
@@ -93,10 +129,12 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
     #cubes, .buildings, #deck {
       padding-top: 30px;
       display: grid;
-      grid-auto-flow: column;
       gap: 20px;
       justify-items: center;
       justify-content: center;
+    }
+    #cubes, #deck {
+      grid-auto-flow: column;
     }
     #deck {
       padding-top: 40px;
@@ -137,12 +175,18 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       );
     }
     .buildings {
-      grid-template-rows: repeat(2, max-content);
+      grid-template-columns: repeat(4, max-content);
       padding: 0;
       margin-bottom: 20px;
     }
-    #cubes > *, .buildings > * {
+    #cubes > *, .buildings > *, .selectMonument > * {
       cursor: pointer;
+    }
+    .selectMonument h3 {
+      margin-top: 2em;
+      text-align: center;
+      pointer-events: none;
+      display: block;
     }
     .selected {
       outline: 6px solid black;
@@ -164,6 +208,10 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
       height: $cardHeight;
       background-color: white;
       border-radius: 1px;
+    }
+    .selectMonument .building {
+      width: $cardWidth * 1.5;
+      height: $cardHeight * 1.5;
     }
     @each $resourceType, $resourceColor in $resourceTypes {
       .cube.#{$resourceType} {
@@ -224,7 +272,7 @@ import { BrickCard, BrickCube, Building1, Building2, Building3, Building4, Build
         background-size: #{$scale} + '%';
       }
     }
-    .buildings {
+    .buildings, .selectMonument {
       .building {
         background-size: contain;
       }
@@ -327,17 +375,15 @@ export class TinyTownsComponent {
   seed: number
   rng!: Prando
   history: string
+  monument?: Thing
+  monumentOptions!: Thing[]
 
-  constructor(private route: ActivatedRoute, private router: Router) {
+  constructor(private route: ActivatedRoute, public router: Router, public location: Location) {
     route.queryParams.subscribe(q => {
-      const historyChanged = q.a && q.a != this.history
-      const seedChanged = q.a && q.s != this.seed
-      if (historyChanged || seedChanged) {
-        this.history = q.a ?? ''
-        this.seed = q.s ?? Math.floor(Math.random() * 100000) + ''
-        this.clear()
-        this.replayHistory()
-      }
+      this.history = q.a ?? ''
+      this.seed = q.s ?? Math.floor(Math.random() * 100000) + ''
+      this.clear()
+      this.replayHistory()
     })
 
     const q = route.snapshot.queryParams
@@ -350,6 +396,15 @@ export class TinyTownsComponent {
 
   clear() {
     this.rng = new Prando(this.seed)
+    this.monument = undefined
+
+    do {
+      this.monumentOptions = [
+        new Building8(this.rng.nextInt(0, 100000)),
+        new Building8(this.rng.nextInt(0, 100000)),
+      ]
+    }
+    while (this.monumentOptions[0].class == this.monumentOptions[1].class)
 
     this.selectableBuildings = [
       new Building1(),
@@ -359,7 +414,6 @@ export class TinyTownsComponent {
       new Building5(this.rng.nextInt(0, 100000)),
       new Building6(this.rng.nextInt(0, 100000)),
       new Building7(this.rng.nextInt(0, 100000)),
-      new Building8(this.rng.nextInt(0, 100000)),
     ]
 
     this.cells = Array.from({ length: 16 }, (x, i) => new Cell(Math.floor(i / 4) + '' + (i % 4), []))
@@ -369,8 +423,18 @@ export class TinyTownsComponent {
   replayHistory() {
     for (let action of this.history.split(',')) {
       switch (action[0]) {
+        case 'm':
+          this.selectMonument(parseInt(action[1]), false)
+          break
         case 'd':
           this.drawOrReshuffle(false)
+          break
+        case 'r':
+          const s = action.substring(1)
+          const [cellId, nthThingString] = s.split('_')
+          const nthThing = parseInt(nthThingString)
+          const cell = this.cells.find(x => x.id == cellId)
+          if (cell) this.removeThing(cell, nthThing, false)
           break
         case 'b':
           {
@@ -423,7 +487,7 @@ export class TinyTownsComponent {
   }
 
   updateHistory(s: string = '') {
-    if (this.history) this.history += ','
+    if (this.history && s) this.history += ','
     if (s) this.history += s
     this.router.navigate([], { queryParams: { s: this.seed, a: this.history } })
   }
@@ -440,6 +504,13 @@ export class TinyTownsComponent {
     else this.selectedThing = thing
   }
 
+  selectMonument(i: number, addToHistory: boolean = true) {
+    const thing = this.monumentOptions[i]
+    this.monument = thing
+    this.selectableBuildings = this.selectableBuildings.concat(thing)
+    if (addToHistory) this.updateHistory('m' + i)
+  }
+
   addToCell(cell: Cell, thing: Thing, addToHistory: boolean = true) {
     const t = Object.create(thing)
     t.animate = addToHistory
@@ -452,9 +523,29 @@ export class TinyTownsComponent {
     this.selectedThing = undefined
   }
 
-  removeThing(cell: Cell, nthThing: number) {
+  removeThing(cell: Cell, nthThing: number, addToHistory: boolean = true) {
     if (!this.selectedThing) {
       cell.things.splice(nthThing, 1)
+      if (addToHistory) this.updateHistory(`r${cell.id}_${nthThing}`)
     }
+  }
+
+  newGame() {
+    this.history = ''
+    this.monument = undefined
+    this.seed = Math.floor(Math.random() * 100000)
+    this.updateHistory()
+    this.clear()
+  }
+
+  restartGame() {
+    this.history = ''
+    this.monument = undefined
+    this.updateHistory()
+    this.clear()
+  }
+
+  get url(): string {
+    return window.location.href
   }
 }
