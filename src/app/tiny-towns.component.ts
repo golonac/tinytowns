@@ -66,8 +66,6 @@ declare let window: any
           (click)="selectThing(selectableCube)"></div>
       </div>
     </ng-container>
-
-    <img hidden *ngFor="let img of images" [src]="img" />
   `,
   styles: [`
     $cardWidth: 110px;
@@ -364,8 +362,6 @@ declare let window: any
   `]
 })
 export class TinyTownsComponent {
-  images = ['../assets/building1.png', '../assets/building1a.png', '../assets/building2.png', '../assets/building2a.png', '../assets/building2b.png', '../assets/building2c.png', '../assets/building2d.png', '../assets/building3.png', '../assets/building3a.png', '../assets/building3b.png', '../assets/building3c.png', '../assets/building3d.png', '../assets/building4.png', '../assets/building4a.png', '../assets/building4b.png', '../assets/building4c.png', '../assets/building4d.png', '../assets/building5.png', '../assets/building5a.png', '../assets/building5b.png', '../assets/building5c.png', '../assets/building5d.png', '../assets/building6.png', '../assets/building6a.png', '../assets/building6b.png', '../assets/building6c.png', '../assets/building6d.png', '../assets/building7.png', '../assets/building7a.png', '../assets/building7b.png', '../assets/building7c.png', '../assets/building7d.png', '../assets/building8.png', '../assets/building8a.png', '../assets/building8b.png', '../assets/building8c.png', '../assets/building8d.png', '../assets/building8e.png', '../assets/building8f.png', '../assets/building8g.png', '../assets/building8h.png', '../assets/building8i.png', '../assets/building8j.png', '../assets/building8k.png', '../assets/building8l.png']
-
   cells!: Cell[]
   selectableCubes: Cube[] = [new BrickCube(), new WheatCube(), new GlassCube(), new WoodCube(), new StoneCube()]
   selectableBuildings!: Thing[]
