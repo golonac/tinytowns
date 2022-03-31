@@ -48,10 +48,10 @@ declare let window: any
       </div>
 
       <div id="deck">
-        <div id="cubesInDrawPile">
+        <div id="cubesInDrawPile" *ngIf="showCardCounters">
           <div *ngFor="let selectableCube of selectableCubes"
             [class]="selectableCube.class">
-            <ng-container *ngIf="showCardCounters">{{cubesInDrawPile(selectableCube.id)}}</ng-container>
+            {{cubesInDrawPile(selectableCube.id)}}
           </div>
         </div>
         <div id="drawPile"
@@ -64,10 +64,10 @@ declare let window: any
           <div *ngFor="let card of discardPile"
             [class]="card.class"></div>
         </div>
-        <div id="cubesInDiscardPile">
+        <div id="cubesInDiscardPile" *ngIf="showCardCounters">
           <div *ngFor="let selectableCube of selectableCubes"
             [class]="selectableCube.class">
-            <ng-container *ngIf="showCardCounters">{{cubesInDiscardPile(selectableCube.id)}}</ng-container>
+            {{cubesInDiscardPile(selectableCube.id)}}
           </div>
         </div>
       </div>
